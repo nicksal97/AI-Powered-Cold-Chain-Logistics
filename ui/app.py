@@ -20,7 +20,7 @@ st.set_page_config(page_title="Cold-Chain Ops", page_icon="❄️", layout="wide
 
 @st.cache_resource
 def client() -> httpx.Client:
-    return httpx.Client(base_url=API_URL, headers=HEADERS, timeout=120)
+    return httpx.Client(base_url=API_URL, headers=HEADERS, timeout=httpx.Timeout(10.0, read=600.0))
 
 
 def get(path: str, **params):
