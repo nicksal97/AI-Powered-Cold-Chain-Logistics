@@ -29,12 +29,30 @@ def get(path: str, **params):
     return r.json()
 
 
+def _detail(resp: httpx.Response) -> str:
+    """Human-readable reason from an API error response."""
+    if resp.status_code == 503:
+        return (
+            "The assistant is switched off because no LLM is configured. Add "
+            "`COLDCHAIN_LLM_API_KEY` to `.env` and restart with `docker compose up`. "
+            "The incident board works without it."
+        )
+    if resp.status_code == 401:
+        return "The API rejected the key. Check `COLDCHAIN_UI_API_KEY`."
+    try:
+        return str(resp.json().get("detail", resp.text))
+    except ValueError:
+        return f"API error {resp.status_code}"
+
+
 def stream_chat(message: str, thread_id: str):
     """Yield (event, data) pairs from the SSE endpoint."""
     with client().stream(
         "POST", "/v1/chat/stream", json={"message": message, "thread_id": thread_id}
     ) as r:
-        r.raise_for_status()
+        if r.is_error:
+            r.read()  # load the body so the error detail is available to the caller
+            r.raise_for_status()
         event = None
         for line in r.iter_lines():
             if line.startswith("event: "):
@@ -136,6 +154,9 @@ with tab_chat:
                     elif event == "error":
                         answer = f"⚠️ {data['detail']}"
                 steps.update(label="Done", state="complete")
+            except httpx.HTTPStatusError as e:
+                steps.update(label="Failed", state="error")
+                answer = f"⚠️ {_detail(e.response)}"
             except httpx.HTTPError as e:
                 steps.update(label="Failed", state="error")
                 answer = f"⚠️ Could not reach the API: {e}"
