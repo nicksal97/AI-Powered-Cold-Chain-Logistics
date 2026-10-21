@@ -84,8 +84,9 @@ def eval_agent(min_pass: float) -> bool:
             {"messages": [HumanMessage(case["question"])]},
             {"configurable": {"thread_id": f"eval-{case['id']}"}, "recursion_limit": 25},
         )
-        calls = [tc["name"] for m in out["messages"] if isinstance(m, AIMessage)
-                 for tc in m.tool_calls]
+        calls = [
+            tc["name"] for m in out["messages"] if isinstance(m, AIMessage) for tc in m.tool_calls
+        ]
         answer = str(out["messages"][-1].content)
         checks = {
             "required_tools": all(t in calls for t in case["must_call"]),
@@ -93,16 +94,22 @@ def eval_agent(min_pass: float) -> bool:
         }
         if case.get("must_not_call_any"):
             checks["no_tools"] = not calls
-        results.append({
-            "id": case["id"], "passed": all(checks.values()), "checks": checks,
-            "tools": calls, "seconds": round(time.perf_counter() - t0, 1),
-            "answer": answer,
-        })
+        results.append(
+            {
+                "id": case["id"],
+                "passed": all(checks.values()),
+                "checks": checks,
+                "tools": calls,
+                "seconds": round(time.perf_counter() - t0, 1),
+                "answer": answer,
+            }
+        )
         mark = "PASS" if results[-1]["passed"] else "FAIL"
         print(f"{mark} {case['id']:<18} tools={calls} {checks}")
     rate = sum(r["passed"] for r in results) / len(results)
-    path = _report("agent", {"model": f"{s.llm_provider}/{s.llm_model}", "pass_rate": rate,
-                             "results": results})
+    path = _report(
+        "agent", {"model": f"{s.llm_provider}/{s.llm_model}", "pass_rate": rate, "results": results}
+    )
     print(f"pass rate {rate:.0%}  report: {path}")
     c.close()
     return rate >= min_pass
