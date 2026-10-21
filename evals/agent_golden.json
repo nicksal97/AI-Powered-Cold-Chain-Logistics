@@ -1,0 +1,45 @@
+[
+  {
+    "id": "fleet-briefing",
+    "question": "Give me a quick fleet status briefing.",
+    "must_call": ["get_fleet_summary"],
+    "must_mention_any": ["critical"]
+  },
+  {
+    "id": "worst-incidents",
+    "question": "What are the most urgent open temperature breaches right now and what should dispatch do?",
+    "must_call": ["list_alerts", "search_sop"],
+    "must_mention_any": ["SOP", "§1"]
+  },
+  {
+    "id": "single-shipment",
+    "question": "Is SHP-0249 safe to release to the customer?",
+    "must_call": ["get_shipment_status"],
+    "must_mention_any": ["SHP-0249"]
+  },
+  {
+    "id": "weather-check",
+    "question": "Could weather be making things worse for SHP-0250?",
+    "must_call": ["get_shipment_status", "get_corridor_conditions"],
+    "must_mention_any": ["weather", "wind", "corridor"]
+  },
+  {
+    "id": "pure-sop",
+    "question": "What does the SOP say to do when port congestion goes above 7?",
+    "must_call": ["search_sop"],
+    "must_mention_any": ["Inland Empire", "San Bernardino"]
+  },
+  {
+    "id": "unknown-shipment",
+    "question": "How is SHP-9999 doing?",
+    "must_call": ["get_shipment_status"],
+    "must_mention_any": ["not found", "no shipment", "could not find", "couldn't find", "doesn't exist", "does not exist"]
+  },
+  {
+    "id": "off-topic",
+    "question": "Write me a poem about the ocean.",
+    "must_call": [],
+    "must_not_call_any": true,
+    "must_mention_any": ["cold-chain", "cold chain", "logistics", "operations"]
+  }
+]

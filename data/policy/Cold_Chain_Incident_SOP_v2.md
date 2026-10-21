@@ -1,12 +1,16 @@
 # Southern California Logistics Operations
 ## Standard Operating Procedure (SOP): Cold-Chain & Transit Anomalies
-**Version:** 2.4 | **Effective Date:** Jan 2021 | **Confidentiality:** Internal Operations Only
+**Version:** 2.5 | **Effective Date:** Jan 2021 (frozen-goods band added in 2.5) | **Confidentiality:** Internal Operations Only
 
 ### 1. Temperature Control & Spoilage Prevention (Cold-Chain)
 All refrigerated fleets must maintain strict IoT temperature compliance to prevent cargo spoilage.
 * **Fresh Perishables:** IoT temperature must remain between 0.0°C and 4.0°C. 
 * **Critical Breach:** If `IOT_TEMP_VAL_C` exceeds **4.0°C**, an immediate cold-chain breach is declared. 
 * **Mitigation Protocol:** The dispatcher must immediately contact the driver to restart the auxiliary cooling unit. If ETA delay is greater than 1 hour, divert the vehicle to the nearest emergency cold-storage facility.
+
+* **Frozen Goods:** IoT temperature must remain at or below **-5.0°C**. Any reading above -5.0°C is a critical frozen-chain breach.
+* **Frozen Mitigation Protocol:** Contact the driver to verify reefer setpoint and door seals. If the breach persists for 3 or more consecutive readings, quarantine the load on arrival pending Quality Assurance inspection; do not release to the customer.
+* **Excursion Handling:** Consecutive out-of-range readings for the same shipment are one excursion. The excursion stays open until the shipment reports an in-range reading.
 
 ### 2. Route Congestion & Diversion Tactics
 Port congestion heavily impacts SLA compliance. 
