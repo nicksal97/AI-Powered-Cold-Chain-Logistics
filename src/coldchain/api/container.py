@@ -3,6 +3,7 @@ fakes, so nothing in the app reaches for globals."""
 
 from __future__ import annotations
 
+import time
 from dataclasses import dataclass, field
 from typing import Any
 
@@ -66,7 +67,19 @@ def build_container(
                 kwargs={"autocommit": True, "prepare_threshold": 0, "row_factory": dict_row},
             )
             checkpointer = PostgresSaver(pool)
-            checkpointer.setup()
+            # Several uvicorn workers start at once; serialise the DDL in setup() with an
+            # advisory lock or the second worker dies on a duplicate CREATE TABLE. Poll with
+            # try-lock: a session *blocked* in pg_advisory_lock holds a snapshot, which makes
+            # the holder's CREATE INDEX CONCURRENTLY wait on it forever.
+            with pool.connection() as conn:
+                while not conn.execute("SELECT pg_try_advisory_lock(727001)").fetchone()[
+                    "pg_try_advisory_lock"
+                ]:
+                    time.sleep(0.2)
+                try:
+                    checkpointer.setup()
+                finally:
+                    conn.execute("SELECT pg_advisory_unlock(727001)")
             closers.append(pool.close)
         else:
             checkpointer = InMemorySaver()
