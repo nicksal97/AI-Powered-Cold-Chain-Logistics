@@ -1,0 +1,14 @@
+[
+  {"query": "what is the allowed temperature for fresh perishables", "expected_section": "Temperature Control"},
+  {"query": "reefer reading went above 4 degrees what do we do", "expected_section": "Temperature Control"},
+  {"query": "frozen load above minus five", "expected_section": "Temperature Control"},
+  {"query": "when must a frozen shipment be quarantined", "expected_section": "Temperature Control"},
+  {"query": "ETA delay more than one hour during a breach", "expected_section": "Temperature Control"},
+  {"query": "Long Beach port is congested", "expected_section": "Route Congestion"},
+  {"query": "where do we send freight when the port is backed up", "expected_section": "Route Congestion"},
+  {"query": "Inland Empire overflow depot", "expected_section": "Route Congestion"},
+  {"query": "congestion severity index 7", "expected_section": "Route Congestion"},
+  {"query": "who handles high risk shipments with likely delays", "expected_section": "Risk Classification"},
+  {"query": "delay probability 0.65 escalation", "expected_section": "Risk Classification"},
+  {"query": "Tier 2 Logistics Manager", "expected_section": "Risk Classification"}
+]

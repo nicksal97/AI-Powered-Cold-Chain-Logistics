@@ -1,0 +1,58 @@
+# docker compose up --build
+#   db      Postgres 16 + pgvector (telemetry, incidents, SOP vectors, agent memory)
+#   seed    one-shot: migrations, telemetry + SOP ingestion, incident detection
+#   api     FastAPI service            http://localhost:8000/docs
+#   ui      Streamlit thin client      http://localhost:8501
+name: coldchain
+
+x-app-env: &app-env
+  COLDCHAIN_DATABASE_URL: postgresql+psycopg://coldchain:coldchain@db:5432/coldchain
+  COLDCHAIN_LLM_PROVIDER: ${COLDCHAIN_LLM_PROVIDER:-openai}
+  COLDCHAIN_LLM_MODEL: ${COLDCHAIN_LLM_MODEL:-gpt-4o-mini}
+  COLDCHAIN_LLM_API_KEY: ${COLDCHAIN_LLM_API_KEY:-}
+  COLDCHAIN_LLM_BASE_URL: ${COLDCHAIN_LLM_BASE_URL:-}
+  COLDCHAIN_EMBEDDING_PROVIDER: ${COLDCHAIN_EMBEDDING_PROVIDER:-hash}
+  COLDCHAIN_EMBEDDING_DIM: ${COLDCHAIN_EMBEDDING_DIM:-384}
+  COLDCHAIN_API_KEYS: ${COLDCHAIN_API_KEYS:-[]}
+
+services:
+  db:
+    image: pgvector/pgvector:pg16
+    environment:
+      POSTGRES_USER: coldchain
+      POSTGRES_PASSWORD: coldchain
+      POSTGRES_DB: coldchain
+    volumes: [pgdata:/var/lib/postgresql/data]
+    ports: ["5432:5432"]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U coldchain"]
+      interval: 5s
+      retries: 10
+
+  seed:
+    build: { context: ., target: api }
+    environment: *app-env
+    volumes: ["./data/raw:/app/data/raw:ro"]
+    command: ["coldchain", "seed"]
+    depends_on: { db: { condition: service_healthy } }
+    restart: "no"
+
+  api:
+    build: { context: ., target: api }
+    environment: *app-env
+    ports: ["8000:8000"]
+    depends_on:
+      db: { condition: service_healthy }
+      seed: { condition: service_completed_successfully }
+
+  ui:
+    build: { context: ., target: ui }
+    environment:
+      COLDCHAIN_API_URL: http://api:8000
+      COLDCHAIN_UI_API_KEY: ${COLDCHAIN_UI_API_KEY:-}
+    ports: ["8501:8501"]
+    depends_on:
+      api: { condition: service_healthy }
+
+volumes:
+  pgdata:
